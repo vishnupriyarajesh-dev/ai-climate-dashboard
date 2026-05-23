@@ -21,6 +21,44 @@ const SAMPLE_LOCATIONS = [
   { name: 'Sydney', lat: -33.868, lon: 151.209 },
 ]
 
+function formatPlaceName(place) {
+  if (place.name && place.country) {
+    return `${place.name}, ${place.country}`
+  }
+
+  return place.name || place.display_name || 'Selected Location'
+}
+
+function normalizeOpenMeteoResult(place) {
+  return {
+    name: formatPlaceName(place),
+    lat: place.latitude,
+    lon: place.longitude,
+  }
+}
+
+function normalizeNominatimResult(place) {
+  const address = place.address || {}
+
+  const name =
+    address.city ||
+    address.town ||
+    address.village ||
+    address.municipality ||
+    address.county ||
+    place.name ||
+    place.display_name?.split(',')[0] ||
+    'Selected Location'
+
+  const region = address.state || address.country
+
+  return {
+    name: region ? `${name}, ${region}` : name,
+    lat: Number(place.lat),
+    lon: Number(place.lon),
+  }
+}
+
 export default function TopBar({ location, setLocation, unit, setUnit }) {
   const queryClient = useQueryClient()
 
@@ -63,28 +101,35 @@ export default function TopBar({ location, setLocation, unit, setUnit }) {
     setMessage('')
 
     try {
-      const response = await fetch(
+      const openMeteoResponse = await fetch(
         `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
           searchTerm
-        )}&count=1&language=en&format=json`
+        )}&count=5&language=en&format=json`
       )
 
-      const data = await response.json()
-      const first = data.results?.[0]
+      const openMeteoData = await openMeteoResponse.json()
+      const openMeteoResults = openMeteoData.results?.map(normalizeOpenMeteoResult) || []
 
-      if (!first) {
-        setMessage('No city found')
-        setResults([])
+      if (openMeteoResults.length > 0) {
+        setResults(openMeteoResults)
         return
       }
 
-      setLocation({
-        name: first.name,
-        lat: first.latitude,
-        lon: first.longitude,
-      })
+      const nominatimResponse = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+          searchTerm
+        )}&format=json&addressdetails=1&limit=5`
+      )
 
-      setQuery('')
+      const nominatimData = await nominatimResponse.json()
+      const nominatimResults = nominatimData.map(normalizeNominatimResult)
+
+      if (nominatimResults.length > 0) {
+        setResults(nominatimResults)
+        return
+      }
+
+      setMessage('No location found')
       setResults([])
     } catch {
       setMessage('Search failed')
@@ -96,12 +141,6 @@ export default function TopBar({ location, setLocation, unit, setUnit }) {
   function handleKeyDown(event) {
     if (event.key === 'Enter') {
       event.preventDefault()
-
-      if (results.length > 0) {
-        selectLocation(results[0])
-        return
-      }
-
       searchCity(query)
     }
   }
@@ -123,17 +162,19 @@ export default function TopBar({ location, setLocation, unit, setUnit }) {
 
         try {
           const response = await fetch(
-            `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}&language=en&format=json`
+            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1`
           )
 
           const data = await response.json()
-          const first = data.results?.[0]
+          const locationName =
+            data.address?.city ||
+            data.address?.town ||
+            data.address?.village ||
+            data.address?.municipality ||
+            data.address?.state ||
+            'My Location'
 
-          setLocation({
-            name: first?.name || 'My Location',
-            lat,
-            lon,
-          })
+          setLocation({ name: locationName, lat, lon })
         } catch {
           setLocation({ name: 'My Location', lat, lon })
         } finally {
@@ -155,7 +196,7 @@ export default function TopBar({ location, setLocation, unit, setUnit }) {
             <Search size={14} className="text-slate-500 flex-shrink-0" />
             <input
               type="text"
-              placeholder="Search city..."
+              placeholder="Search any city..."
               value={query}
               onChange={handleSearchInput}
               onKeyDown={handleKeyDown}
@@ -163,7 +204,7 @@ export default function TopBar({ location, setLocation, unit, setUnit }) {
             />
           </div>
 
-          {(results.length > 0 || message || searching) && (
+          {(results.length > 0 || message || searching || query.trim().length >= 2) && (
             <div className="absolute top-full mt-2 left-0 right-0 card overflow-hidden shadow-lg z-50">
               {searching && (
                 <div className="px-3 py-2.5 text-sm text-slate-500">Searching...</div>
@@ -172,7 +213,7 @@ export default function TopBar({ location, setLocation, unit, setUnit }) {
               {!searching &&
                 results.map((item) => (
                   <button
-                    key={item.name}
+                    key={`${item.name}-${item.lat}-${item.lon}`}
                     type="button"
                     onMouseDown={() => selectLocation(item)}
                     className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-slate-50 transition-colors text-left"
@@ -181,10 +222,6 @@ export default function TopBar({ location, setLocation, unit, setUnit }) {
                     <span className="text-sm text-slate-900 truncate">{item.name}</span>
                   </button>
                 ))}
-
-              {!searching && message && (
-                <div className="px-3 py-2.5 text-sm text-slate-500">{message}</div>
-              )}
 
               {!searching && results.length === 0 && query.trim().length >= 2 && !message && (
                 <button
@@ -197,6 +234,10 @@ export default function TopBar({ location, setLocation, unit, setUnit }) {
                     Search “{query}”
                   </span>
                 </button>
+              )}
+
+              {!searching && message && (
+                <div className="px-3 py-2.5 text-sm text-slate-500">{message}</div>
               )}
             </div>
           )}

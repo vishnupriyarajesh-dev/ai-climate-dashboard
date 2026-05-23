@@ -1,16 +1,55 @@
-# React + Vite
+# AtmoSense - Climate Intelligence Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+AtmoSense is a modern climate and weather intelligence dashboard built with React, Vite, Tailwind CSS, React Query, Recharts, and Open-Meteo APIs.
 
-Currently, two official plugins are available:
+It provides real-time weather insights, air quality data, forecast trends, climate analytics, storm risk tracking, travel recommendations, and custom environmental risk scoring.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+- Current weather overview
+- Hourly forecast
+- Weekly weather trends
+- Air Quality Index dashboard
+- UV index, humidity, wind, visibility, pressure, and precipitation metrics
+- Temperature and rainfall charts
+- Climate analytics using historical weather data
+- Weather Risk Score
+- Storm tracking dashboard
+- Travel safety recommendations
+- Weather alerts
+- Responsive desktop and mobile layout
+- Error boundary and loading states
+- Search by city
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack
 
-## Expanding the ESLint configuration
+- React
+- Vite
+- Tailwind CSS
+- TanStack React Query
+- Recharts
+- Lucide React
+- Axios
+- Open-Meteo Weather API
+- Open-Meteo Air Quality API
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Data Sources
+
+- Weather and forecast data: [Open-Meteo](https://open-meteo.com/)
+- Air quality data: [Open-Meteo Air Quality API](https://open-meteo.com/en/docs/air-quality-api)
+- Historical climate data: [Open-Meteo Historical Weather API](https://open-meteo.com/en/docs/historical-weather-api)
+
+## Project Highlights
+
+- Built reusable dashboard components for weather, AQI, climate, travel, and storm intelligence.
+- Implemented custom scoring logic for weather risk and travel safety.
+- Used React Query for API caching, loading states, and data synchronization.
+- Designed responsive layouts for desktop and mobile views.
+- Created analytics-style charts for temperature, rainfall, climate patterns, and forecast trends.
+
+## Getting Started
+
+Install dependencies:
+
+```bash
+npm install
