@@ -52,10 +52,3 @@ export function useClimateNormals(location) {
     enabled:   !!location.lat && !!location.lon,
   })
 }
-export function useStorms(location) {
-  // Mock data so it doesn't crash
-  return {
-    data: [],
-    isLoading: false
-  }
-}
